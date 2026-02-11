@@ -1,0 +1,13 @@
+[project]
+name = "zeek-mcp-server"
+version = "0.1.0"
+description = "MCP server for Zeek network security monitoring - PCAP analysis, log parsing, and anomaly detection"
+requires-python = ">=3.11"
+dependencies = [
+    "mcp>=1.26.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+]
+
+[project.scripts]
+zeek-mcp = "server:main"
