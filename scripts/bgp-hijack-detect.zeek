@@ -25,14 +25,14 @@ export {
         BGP_Non_Standard_Port,
     };
 
-    ## Minimum session duration to not trigger short-session alert (seconds)
-    const short_session_threshold = 5.0 &redef;
+    ## Minimum session duration to not trigger short-session alert
+    const short_session_threshold = 5sec &redef;
 
     ## Maximum connections from one source in the tracking window
     const rapid_conn_threshold = 5 &redef;
 
-    ## Time window for tracking rapid connections (seconds)
-    const rapid_conn_window = 60.0 &redef;
+    ## Time window for tracking rapid connections
+    const rapid_conn_window = 60sec &redef;
 }
 
 # Track BGP connection counts per source
@@ -56,7 +56,7 @@ event connection_state_remove(c: connection)
     # Notice: New BGP session detected
     NOTICE([
         $note=BGP_New_Session,
-        $msg=fmt("BGP session detected: %s -> %s:%s (duration: %.2fs)",
+        $msg=fmt("BGP session detected: %s -> %s:%s (duration: %s)",
                  src, dst, resp_port, c$duration),
         $src=src,
         $dst=dst,
@@ -70,7 +70,7 @@ event connection_state_remove(c: connection)
         {
         NOTICE([
             $note=BGP_Short_Session,
-            $msg=fmt("Short BGP session: %s -> %s (%.2fs) - possible hijack probe",
+            $msg=fmt("Short BGP session: %s -> %s (%s) - possible hijack probe",
                      src, dst, c$duration),
             $src=src,
             $dst=dst,
@@ -88,13 +88,13 @@ event connection_state_remove(c: connection)
 
     local elapsed = network_time() - bgp_conn_start[src];
 
-    if ( elapsed <= double_to_interval(rapid_conn_window) )
+    if ( elapsed <= rapid_conn_window )
         {
         if ( bgp_conn_count[src] >= rapid_conn_threshold )
             {
             NOTICE([
                 $note=BGP_Rapid_Connections,
-                $msg=fmt("Rapid BGP connections from %s: %d sessions in %.0fs",
+                $msg=fmt("Rapid BGP connections from %s: %d sessions in %s",
                          src, bgp_conn_count[src], elapsed),
                 $src=src,
                 $identifier=fmt("rapid-%s", src),
