@@ -38,7 +38,7 @@ jobs:
       - name: Run tests
         run: |
           if [ -d tests ] || [ -d test ]; then
-            uv pip install pytest
+            uv pip install pytest pytest-asyncio pytest-cov
             uv run pytest -v
           else
             echo "No tests directory found, skipping"
