@@ -1,4 +1,4 @@
-FROM zeek/zeek:latest
+FROM zeek/zeek:7.0
 
 LABEL maintainer="rhuanssauro"
 LABEL description="Zeek MCP Server - PCAP analysis and network security monitoring"
