@@ -12,7 +12,6 @@ import asyncio
 import json
 import logging
 import os
-import shutil
 import sys
 import uuid
 from pathlib import Path
@@ -56,7 +55,8 @@ def _json_err(error: str) -> str:
 async def _run_zeek(args: list[str], cwd: str) -> tuple[int, str, str]:
     """Run Zeek as an async subprocess with timeout."""
     proc = await asyncio.create_subprocess_exec(
-        "zeek", *args,
+        "zeek",
+        *args,
         cwd=cwd,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
@@ -138,14 +138,16 @@ async def zeek_analyze_pcap(
 
     summary = get_log_summary(str(run_dir))
 
-    return _json_ok({
-        "analysis_id": analysis_id,
-        "pcap": pcap_filename,
-        "pcap_size_bytes": file_size,
-        "log_files": log_files,
-        "summary": summary,
-        "zeek_stderr": stderr[:300] if stderr else "",
-    })
+    return _json_ok(
+        {
+            "analysis_id": analysis_id,
+            "pcap": pcap_filename,
+            "pcap_size_bytes": file_size,
+            "log_files": log_files,
+            "summary": summary,
+            "zeek_stderr": stderr[:300] if stderr else "",
+        }
+    )
 
 
 @mcp.tool()
@@ -182,15 +184,17 @@ async def zeek_query_log(
             rows = filter_log(str(log_path), filter_field, filter_value, limit)
         else:
             rows = parse_zeek_log(str(log_path), limit)
-    except Exception as e:
+    except (OSError, ValueError, KeyError) as e:
         return _json_err(f"Parse error: {e}")
 
-    return _json_ok({
-        "analysis_id": analysis_id,
-        "log": log_name,
-        "row_count": len(rows),
-        "rows": rows,
-    })
+    return _json_ok(
+        {
+            "analysis_id": analysis_id,
+            "log": log_name,
+            "row_count": len(rows),
+            "rows": rows,
+        }
+    )
 
 
 @mcp.tool()
@@ -214,13 +218,15 @@ async def zeek_list_logs(analysis_id: str) -> str:
 
     try:
         summary = get_log_summary(str(run_dir))
-    except Exception as e:
+    except (OSError, ValueError, KeyError) as e:
         return _json_err(f"Error reading logs: {e}")
 
-    return _json_ok({
-        "analysis_id": analysis_id,
-        "summary": summary,
-    })
+    return _json_ok(
+        {
+            "analysis_id": analysis_id,
+            "summary": summary,
+        }
+    )
 
 
 @mcp.tool()
@@ -242,32 +248,38 @@ async def zeek_status() -> str:
             if d.is_dir():
                 dir_size = sum(f.stat().st_size for f in d.rglob("*") if f.is_file())
                 log_count = len(list(d.glob("*.log")))
-                analyses.append({
-                    "id": d.name,
-                    "log_count": log_count,
-                    "size_bytes": dir_size,
-                })
+                analyses.append(
+                    {
+                        "id": d.name,
+                        "log_count": log_count,
+                        "size_bytes": dir_size,
+                    }
+                )
                 total_size += dir_size
 
     available_pcaps: list[dict[str, Any]] = []
     if PCAP_DIR.is_dir():
         for f in sorted(PCAP_DIR.glob("*")):
             if f.is_file() and f.suffix in (".pcap", ".pcapng", ".cap"):
-                available_pcaps.append({
-                    "name": f.name,
-                    "size_bytes": f.stat().st_size,
-                })
+                available_pcaps.append(
+                    {
+                        "name": f.name,
+                        "size_bytes": f.stat().st_size,
+                    }
+                )
 
-    return _json_ok({
-        "zeek_version": version,
-        "custom_scripts": custom_scripts,
-        "pcap_directory": str(PCAP_DIR),
-        "available_pcaps": available_pcaps,
-        "analyses": analyses,
-        "output_disk_usage_bytes": total_size,
-        "max_pcap_size_mb": MAX_PCAP_SIZE // (1024 * 1024),
-        "subprocess_timeout_sec": SUBPROCESS_TIMEOUT,
-    })
+    return _json_ok(
+        {
+            "zeek_version": version,
+            "custom_scripts": custom_scripts,
+            "pcap_directory": str(PCAP_DIR),
+            "available_pcaps": available_pcaps,
+            "analyses": analyses,
+            "output_disk_usage_bytes": total_size,
+            "max_pcap_size_mb": MAX_PCAP_SIZE // (1024 * 1024),
+            "subprocess_timeout_sec": SUBPROCESS_TIMEOUT,
+        }
+    )
 
 
 @mcp.tool()
@@ -312,19 +324,21 @@ async def zeek_run_script(
     if notice_file.is_file():
         try:
             notices = parse_zeek_log(str(notice_file))
-        except Exception:
-            pass
+        except (OSError, ValueError) as e:
+            logger.warning(f"Failed to parse notice.log: {e}")
 
-    return _json_ok({
-        "analysis_id": analysis_id,
-        "script": script_name,
-        "pcap": pcap_filename,
-        "return_code": returncode,
-        "log_files": log_files,
-        "notices": notices,
-        "stdout": stdout[:500] if stdout else "",
-        "stderr": stderr[:500] if stderr else "",
-    })
+    return _json_ok(
+        {
+            "analysis_id": analysis_id,
+            "script": script_name,
+            "pcap": pcap_filename,
+            "return_code": returncode,
+            "log_files": log_files,
+            "notices": notices,
+            "stdout": stdout[:500] if stdout else "",
+            "stderr": stderr[:500] if stderr else "",
+        }
+    )
 
 
 @mcp.tool()
@@ -349,13 +363,15 @@ async def zeek_get_connections(
 
     try:
         summary = get_connections_summary(str(conn_log))
-    except Exception as e:
+    except (OSError, ValueError, KeyError) as e:
         return _json_err(f"Error parsing conn.log: {e}")
 
-    return _json_ok({
-        "analysis_id": analysis_id,
-        "connections": summary,
-    })
+    return _json_ok(
+        {
+            "analysis_id": analysis_id,
+            "connections": summary,
+        }
+    )
 
 
 @mcp.tool()
@@ -401,28 +417,32 @@ async def zeek_detect_anomalies(
             try:
                 notices = parse_zeek_log(str(notice_file))
                 all_notices.extend(notices)
-            except Exception:
-                pass
+            except (OSError, ValueError) as e:
+                logger.warning(f"Failed to parse notice.log for {script.name}: {e}")
 
-        all_results.append({
-            "script": script.name,
-            "return_code": returncode,
-            "log_files": log_files,
-            "notice_count": len(notices),
-            "notices": notices,
-            "stderr": stderr[:200] if stderr else "",
-        })
+        all_results.append(
+            {
+                "script": script.name,
+                "return_code": returncode,
+                "log_files": log_files,
+                "notice_count": len(notices),
+                "notices": notices,
+                "stderr": stderr[:200] if stderr else "",
+            }
+        )
 
     anomaly_detected = len(all_notices) > 0
 
-    return _json_ok({
-        "analysis_id": analysis_id,
-        "pcap": pcap_filename,
-        "scripts_run": len(all_results),
-        "anomaly_detected": anomaly_detected,
-        "total_notices": len(all_notices),
-        "results": all_results,
-    })
+    return _json_ok(
+        {
+            "analysis_id": analysis_id,
+            "pcap": pcap_filename,
+            "scripts_run": len(all_results),
+            "anomaly_detected": anomaly_detected,
+            "total_notices": len(all_notices),
+            "results": all_results,
+        }
+    )
 
 
 if __name__ == "__main__":
