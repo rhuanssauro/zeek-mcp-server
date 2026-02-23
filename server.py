@@ -79,7 +79,7 @@ async def _run_zeek(args: list[str], cwd: str) -> tuple[int, str, str]:
 
 
 # Import parser functions
-from zeek_parser import (
+from zeek_parser import (  # noqa: E402
     filter_log,
     get_connections_summary,
     get_log_summary,
