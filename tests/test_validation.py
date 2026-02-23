@@ -14,7 +14,6 @@ import pytest
 
 from server import _safe_path
 
-
 # ---------------------------------------------------------------------------
 # _safe_path — path traversal prevention
 # ---------------------------------------------------------------------------
@@ -213,9 +212,9 @@ class TestSubprocessTimeout:
 class TestInvalidInputRejection:
     async def test_empty_pcap_filename(self, mock_dirs):
         """Empty PCAP filename is handled gracefully."""
-        from server import zeek_analyze_pcap
-
         import json
+
+        from server import zeek_analyze_pcap
 
         result = json.loads(await zeek_analyze_pcap(""))
         assert result["status"] == "error"
@@ -245,18 +244,18 @@ class TestInvalidInputRejection:
 
     async def test_special_characters_in_filename(self, mock_dirs):
         """Special characters in filenames are handled safely."""
-        from server import zeek_analyze_pcap
-
         import json
+
+        from server import zeek_analyze_pcap
 
         result = json.loads(await zeek_analyze_pcap("test;rm -rf /.pcap"))
         assert result["status"] == "error"
 
     async def test_null_bytes_in_path(self, mock_dirs):
         """Null bytes in path components are rejected."""
-        from server import zeek_analyze_pcap
-
         import json
+
+        from server import zeek_analyze_pcap
 
         result = json.loads(await zeek_analyze_pcap("test\x00.pcap"))
         assert result["status"] == "error"
