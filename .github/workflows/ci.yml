@@ -38,7 +38,8 @@ jobs:
       - name: Run tests
         run: |
           if [ -d tests ] || [ -d test ]; then
-            uvx pytest -v
+            uv pip install pytest
+            uv run pytest -v
           else
             echo "No tests directory found, skipping"
           fi
