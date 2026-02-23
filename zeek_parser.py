@@ -105,11 +105,13 @@ def get_log_summary(directory: str) -> dict[str, Any]:
             pass
 
         total_rows += row_count
-        files_info.append({
-            "name": log_file.name,
-            "rows": row_count,
-            "size_bytes": os.path.getsize(log_file),
-        })
+        files_info.append(
+            {
+                "name": log_file.name,
+                "rows": row_count,
+                "size_bytes": os.path.getsize(log_file),
+            }
+        )
 
     return {
         "file_count": len(files_info),

@@ -212,8 +212,7 @@ async def zeek_list_logs(analysis_id: str) -> str:
     if not run_dir.is_dir():
         analyses = [d.name for d in OUTPUT_DIR.iterdir() if d.is_dir()]
         return _json_err(
-            f"Analysis not found: {analysis_id}. "
-            f"Available analyses: {analyses or 'none'}"
+            f"Analysis not found: {analysis_id}. Available analyses: {analyses or 'none'}"
         )
 
     try:
@@ -237,9 +236,7 @@ async def zeek_status() -> str:
 
     custom_scripts: list[str] = []
     if SCRIPTS_DIR.is_dir():
-        custom_scripts = sorted(
-            f.name for f in SCRIPTS_DIR.glob("*.zeek") if f.is_file()
-        )
+        custom_scripts = sorted(f.name for f in SCRIPTS_DIR.glob("*.zeek") if f.is_file())
 
     analyses: list[dict[str, Any]] = []
     total_size = 0
@@ -306,9 +303,7 @@ async def zeek_run_script(
 
     if not script_path.is_file():
         available = [f.name for f in SCRIPTS_DIR.glob("*.zeek")]
-        return _json_err(
-            f"Script not found: {script_name}. Available: {available or 'none'}"
-        )
+        return _json_err(f"Script not found: {script_name}. Available: {available or 'none'}")
 
     analysis_id = f"script-{str(uuid.uuid4())[:8]}"
     run_dir = OUTPUT_DIR / analysis_id
